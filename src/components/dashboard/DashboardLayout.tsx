@@ -24,7 +24,8 @@ const navigation = [
   { name: "Meals", href: "/meals", icon: UtensilsCrossed },
   { name: "Orders", href: "/orders", icon: ShoppingBag },
   { name: "Users", href: "/users", icon: Users },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Referrals", href: "/referrals", icon: Users },
+  { name: "Partners", href: "/partners", icon: Users },
 ];
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
