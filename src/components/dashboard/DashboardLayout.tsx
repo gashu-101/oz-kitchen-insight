@@ -13,25 +13,70 @@ import {
   Menu,
   X,
   ChefHat,
+  CreditCard,
+  UserCheck,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const navigation = [
+const superAdminNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Meals", href: "/meals", icon: UtensilsCrossed },
   { name: "Orders", href: "/orders", icon: ShoppingBag },
+  { name: "Payments", href: "/payments", icon: CreditCard },
   { name: "Users", href: "/users", icon: Users },
-  { name: "Referrals", href: "/referrals", icon: Users },
+  { name: "Referrals", href: "/referrals", icon: UserCheck },
   { name: "Partners", href: "/partners", icon: Users },
+];
+
+const partnerNavigation = [
+  { name: "Dashboard", href: "/partner-dashboard", icon: LayoutDashboard },
+  { name: "My Referrals", href: "/partner-referrals", icon: UserCheck },
 ];
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    checkUserRole();
+  }, []);
+
+  const checkUserRole = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Check if super admin
+    const { data: adminData } = await supabase
+      .from("admin_users")
+      .select("role")
+      .eq("id", session.user.id)
+      .eq("is_active", true)
+      .single();
+
+    if (adminData) {
+      setUserRole(adminData.role);
+      return;
+    }
+
+    // Check if partner
+    const { data: partnerData } = await supabase
+      .from("partners")
+      .select("id")
+      .eq("contact_email", session.user.email)
+      .eq("status", "active")
+      .single();
+
+    if (partnerData) {
+      setUserRole("partner");
+    }
+  };
+
+  const navigation = userRole === "partner" ? partnerNavigation : superAdminNavigation;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
