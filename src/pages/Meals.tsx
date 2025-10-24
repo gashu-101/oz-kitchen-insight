@@ -27,15 +27,24 @@ interface Meal {
   dietary_tags: string[];
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+}
+
 const Meals = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
   useEffect(() => {
     fetchMeals();
+    fetchCategories();
     
     const channel = supabase
       .channel('meals-changes')
@@ -65,6 +74,21 @@ const Meals = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("meal_categories")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error: any) {
+      console.error("Failed to fetch categories:", error);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this meal?")) return;
 
@@ -77,10 +101,16 @@ const Meals = () => {
     }
   };
 
-  const filteredMeals = meals.filter((meal) =>
-    meal.name.toLowerCase().includes(search.toLowerCase()) ||
-    meal.description?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredMeals = meals.filter((meal) => {
+    const matchesSearch = meal.name.toLowerCase().includes(search.toLowerCase()) ||
+      meal.description?.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || meal.category_id === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const getCategoryName = (categoryId: string) => {
+    return categories.find(c => c.id === categoryId)?.name || "Uncategorized";
+  };
 
   return (
     <DashboardLayout>
@@ -106,13 +136,34 @@ const Meals = () => {
               className="pl-10"
             />
           </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={selectedCategory === "all" ? "default" : "outline"}
+              onClick={() => setSelectedCategory("all")}
+              size="sm"
+            >
+              All
+            </Button>
+            {categories.map((category) => (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.id ? "default" : "outline"}
+                onClick={() => setSelectedCategory(category.id)}
+                size="sm"
+              >
+                {category.name}
+              </Button>
+            ))}
+          </div>
         </div>
 
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Image</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Status</TableHead>
@@ -123,20 +174,36 @@ const Meals = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : filteredMeals.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     No meals found
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredMeals.map((meal) => (
                   <TableRow key={meal.id}>
+                    <TableCell>
+                      {meal.image_url ? (
+                        <img
+                          src={meal.image_url}
+                          alt={meal.name}
+                          className="w-16 h-16 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">No image</span>
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{meal.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{getCategoryName(meal.category_id)}</Badge>
+                    </TableCell>
                     <TableCell className="max-w-xs truncate">{meal.description}</TableCell>
                     <TableCell>ETB {meal.base_price}</TableCell>
                     <TableCell>
