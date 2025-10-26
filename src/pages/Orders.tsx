@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Download } from "lucide-react";
 import { toast } from "sonner";
+import { exportToCSV } from "@/lib/csvExport";
 import {
   Table,
   TableBody,
@@ -100,6 +102,24 @@ const Orders = () => {
     return colors[status] || "bg-gray-100 text-gray-800";
   };
 
+  const handleExportCSV = () => {
+    const exportData = filteredOrders.map(order => ({
+      order_number: order.order_number,
+      customer_name: `${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}`.trim(),
+      total_amount: order.total_amount,
+      status: order.status,
+      payment_status: order.payment_status,
+      created_at: new Date(order.created_at).toLocaleString(),
+    }));
+
+    exportToCSV(
+      exportData,
+      'orders',
+      ['order_number', 'customer_name', 'total_amount', 'status', 'payment_status', 'created_at']
+    );
+    toast.success('Orders exported successfully');
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -118,6 +138,10 @@ const Orders = () => {
               className="pl-10"
             />
           </div>
+          <Button onClick={handleExportCSV} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
         </div>
 
         <div className="border rounded-lg">
