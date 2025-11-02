@@ -185,32 +185,47 @@ export type Database = {
         Row: {
           created_at: string | null
           delivery_date: string
+          delivery_time_slot: string | null
           id: string
           meal_id: string
           meal_plan_id: string | null
+          meal_time: string | null
+          meal_type: string | null
           quantity: number
           special_instructions: string | null
+          status: string | null
           unit_price: number
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           delivery_date: string
+          delivery_time_slot?: string | null
           id?: string
           meal_id: string
           meal_plan_id?: string | null
+          meal_time?: string | null
+          meal_type?: string | null
           quantity?: number
           special_instructions?: string | null
+          status?: string | null
           unit_price: number
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           delivery_date?: string
+          delivery_time_slot?: string | null
           id?: string
           meal_id?: string
           meal_plan_id?: string | null
+          meal_time?: string | null
+          meal_type?: string | null
           quantity?: number
           special_instructions?: string | null
+          status?: string | null
           unit_price?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -289,6 +304,7 @@ export type Database = {
           image_url: string | null
           ingredients: string[] | null
           is_available: boolean | null
+          meal_type: string | null
           name: string
           nutritional_info: Json | null
           preparation_time: number | null
@@ -305,6 +321,7 @@ export type Database = {
           image_url?: string | null
           ingredients?: string[] | null
           is_available?: boolean | null
+          meal_type?: string | null
           name: string
           nutritional_info?: Json | null
           preparation_time?: number | null
@@ -321,6 +338,7 @@ export type Database = {
           image_url?: string | null
           ingredients?: string[] | null
           is_available?: boolean | null
+          meal_type?: string | null
           name?: string
           nutritional_info?: Json | null
           preparation_time?: number | null
@@ -639,10 +657,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          aau_campus: string | null
           created_at: string | null
           delivery_address: Json | null
           first_name: string | null
           id: string
+          is_aau_student: boolean | null
           last_name: string | null
           phone_number: string | null
           preferences: Json | null
@@ -650,27 +670,16 @@ export type Database = {
           referral_source: string | null
           role: string | null
           telegram_id: number | null
+          telegram_username: string | null
           updated_at: string | null
         }
         Insert: {
-          created_at?: string | null
-          delivery_address?: Json | null
-          first_name?: string | null
-          id: string
-          last_name?: string | null
-          phone_number?: string | null
-          preferences?: Json | null
-          referral_partner_id?: string | null
-          referral_source?: string | null
-          role?: string | null
-          telegram_id?: number | null
-          updated_at?: string | null
-        }
-        Update: {
+          aau_campus?: string | null
           created_at?: string | null
           delivery_address?: Json | null
           first_name?: string | null
           id?: string
+          is_aau_student?: boolean | null
           last_name?: string | null
           phone_number?: string | null
           preferences?: Json | null
@@ -678,6 +687,24 @@ export type Database = {
           referral_source?: string | null
           role?: string | null
           telegram_id?: number | null
+          telegram_username?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aau_campus?: string | null
+          created_at?: string | null
+          delivery_address?: Json | null
+          first_name?: string | null
+          id?: string
+          is_aau_student?: boolean | null
+          last_name?: string | null
+          phone_number?: string | null
+          preferences?: Json | null
+          referral_partner_id?: string | null
+          referral_source?: string | null
+          role?: string | null
+          telegram_id?: number | null
+          telegram_username?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -706,7 +733,7 @@ export type Database = {
           expires_at: string | null
           first_payment_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           partner_id: string
           referral_token: string
           status: string | null
@@ -721,7 +748,7 @@ export type Database = {
           expires_at?: string | null
           first_payment_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           partner_id: string
           referral_token: string
           status?: string | null
@@ -736,7 +763,7 @@ export type Database = {
           expires_at?: string | null
           first_payment_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           partner_id?: string
           referral_token?: string
           status?: string | null
@@ -769,6 +796,7 @@ export type Database = {
           features: Json | null
           id: string
           is_active: boolean | null
+          meal_types: string[] | null
           meals_per_week: number
           name: string
         }
@@ -780,6 +808,7 @@ export type Database = {
           features?: Json | null
           id?: string
           is_active?: boolean | null
+          meal_types?: string[] | null
           meals_per_week: number
           name: string
         }
@@ -791,6 +820,7 @@ export type Database = {
           features?: Json | null
           id?: string
           is_active?: boolean | null
+          meal_types?: string[] | null
           meals_per_week?: number
           name?: string
         }
@@ -798,11 +828,16 @@ export type Database = {
       }
       user_subscriptions: {
         Row: {
+          activated_at: string | null
           auto_renew: boolean | null
           budget_limit: number | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
           created_at: string | null
           end_date: string
           id: string
+          payment_id: string | null
+          payment_status: string | null
           plan_id: string
           start_date: string
           status: string | null
@@ -810,11 +845,16 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          activated_at?: string | null
           auto_renew?: boolean | null
           budget_limit?: number | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string | null
           end_date: string
           id?: string
+          payment_id?: string | null
+          payment_status?: string | null
           plan_id: string
           start_date: string
           status?: string | null
@@ -822,11 +862,16 @@ export type Database = {
           user_id: string
         }
         Update: {
+          activated_at?: string | null
           auto_renew?: boolean | null
           budget_limit?: number | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string | null
           end_date?: string
           id?: string
+          payment_id?: string | null
+          payment_status?: string | null
           plan_id?: string
           start_date?: string
           status?: string | null
@@ -855,22 +900,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_old_notifications: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      create_sample_user_data: {
-        Args: { user_id: string }
-        Returns: undefined
-      }
-      expire_old_referrals: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      expire_old_referrals_scheduled: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_old_notifications: { Args: never; Returns: undefined }
+      create_sample_user_data: { Args: { user_id: string }; Returns: undefined }
+      expire_old_referrals: { Args: never; Returns: undefined }
+      expire_old_referrals_scheduled: { Args: never; Returns: undefined }
       generate_monthly_settlement: {
         Args: { p_partner_id: string; p_settlement_month: string }
         Returns: string
@@ -957,28 +990,16 @@ export type Database = {
           total_amount: number
         }[]
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_valid_partner_api_key: {
-        Args: { api_key: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { user_id: string }; Returns: boolean }
+      is_valid_partner_api_key: { Args: { api_key: string }; Returns: boolean }
       link_referral_to_user: {
         Args: { p_referral_token: string; p_user_id: string }
         Returns: boolean
       }
-      reset_sample_data: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      reset_sample_data: { Args: never; Returns: undefined }
       validate_sample_data: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           record_count: number
           status: string

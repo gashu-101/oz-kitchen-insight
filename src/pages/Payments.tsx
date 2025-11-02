@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Download } from "lucide-react";
 import { toast } from "sonner";
 import { exportToCSV } from "@/lib/csvExport";
+import { PaymentDetailSheet } from "@/components/payments/PaymentDetailSheet";
 import {
   Table,
   TableBody,
@@ -39,6 +40,8 @@ const Payments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchPayments();
@@ -178,7 +181,14 @@ const Payments = () => {
                 </TableRow>
               ) : (
                 filteredPayments.map((payment) => (
-                  <TableRow key={payment.id}>
+                  <TableRow 
+                    key={payment.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      setSelectedPayment(payment);
+                      setSheetOpen(true);
+                    }}
+                  >
                     <TableCell className="font-medium">
                       {payment.orders?.order_number}
                     </TableCell>
@@ -212,6 +222,12 @@ const Payments = () => {
             </TableBody>
           </Table>
         </div>
+
+        <PaymentDetailSheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          payment={selectedPayment}
+        />
       </div>
     </DashboardLayout>
   );

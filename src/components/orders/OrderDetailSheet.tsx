@@ -1,0 +1,154 @@
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+interface OrderDetailSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  order: any;
+}
+
+export const OrderDetailSheet = ({ open, onOpenChange, order }: OrderDetailSheetProps) => {
+  if (!order) return null;
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      pending: "bg-yellow-100 text-yellow-800",
+      confirmed: "bg-blue-100 text-blue-800",
+      preparing: "bg-purple-100 text-purple-800",
+      delivered: "bg-green-100 text-green-800",
+      cancelled: "bg-red-100 text-red-800",
+    };
+    return colors[status] || "bg-gray-100 text-gray-800";
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Order Details</SheetTitle>
+        </SheetHeader>
+
+        <div className="space-y-6 mt-6">
+          {/* Order Header */}
+          <div>
+            <h3 className="text-lg font-semibold">{order.order_number}</h3>
+            <p className="text-sm text-muted-foreground">
+              {new Date(order.created_at).toLocaleString()}
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Customer Information */}
+          <div>
+            <h4 className="font-medium mb-2">Customer</h4>
+            <p className="text-sm">
+              {order.profiles?.first_name} {order.profiles?.last_name}
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Delivery Address */}
+          {order.delivery_address && (
+            <>
+              <div>
+                <h4 className="font-medium mb-2">Delivery Address</h4>
+                <div className="text-sm space-y-1">
+                  {order.delivery_address.street && (
+                    <p>{order.delivery_address.street}</p>
+                  )}
+                  {order.delivery_address.city && (
+                    <p>{order.delivery_address.city}</p>
+                  )}
+                  {order.delivery_address.zone && (
+                    <p>Zone: {order.delivery_address.zone}</p>
+                  )}
+                  {order.delivery_address.building_number && (
+                    <p>Building: {order.delivery_address.building_number}</p>
+                  )}
+                  {order.delivery_address.floor && (
+                    <p>Floor: {order.delivery_address.floor}</p>
+                  )}
+                  {order.delivery_address.special_instructions && (
+                    <p className="text-muted-foreground italic">
+                      {order.delivery_address.special_instructions}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
+          {/* Order Status */}
+          <div>
+            <h4 className="font-medium mb-2">Status</h4>
+            <div className="flex gap-2">
+              <Badge className={getStatusColor(order.status)}>
+                {order.status}
+              </Badge>
+              <Badge variant={order.payment_status === 'completed' ? 'default' : 'secondary'}>
+                {order.payment_status}
+              </Badge>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Delivery Info */}
+          {(order.delivery_date || order.delivery_time_slot) && (
+            <>
+              <div>
+                <h4 className="font-medium mb-2">Delivery</h4>
+                <div className="text-sm space-y-1">
+                  {order.delivery_date && (
+                    <p>Date: {new Date(order.delivery_date).toLocaleDateString()}</p>
+                  )}
+                  {order.delivery_time_slot && (
+                    <p>Time Slot: {order.delivery_time_slot}</p>
+                  )}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
+          {/* Payment Details */}
+          <div>
+            <h4 className="font-medium mb-2">Payment</h4>
+            <div className="text-sm space-y-1">
+              {order.payment_method && (
+                <p>Method: <span className="capitalize">{order.payment_method}</span></p>
+              )}
+              <p>Subtotal: ETB {order.subtotal?.toLocaleString() || '0'}</p>
+              {order.delivery_fee > 0 && (
+                <p>Delivery Fee: ETB {order.delivery_fee.toLocaleString()}</p>
+              )}
+              {order.discount_amount > 0 && (
+                <p className="text-green-600">
+                  Discount: -ETB {order.discount_amount.toLocaleString()}
+                </p>
+              )}
+              <p className="font-semibold text-base mt-2">
+                Total: ETB {order.total_amount.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Notes */}
+          {order.notes && (
+            <>
+              <Separator />
+              <div>
+                <h4 className="font-medium mb-2">Notes</h4>
+                <p className="text-sm text-muted-foreground">{order.notes}</p>
+              </div>
+            </>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};

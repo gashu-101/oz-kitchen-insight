@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Download } from "lucide-react";
 import { toast } from "sonner";
 import { exportToCSV } from "@/lib/csvExport";
+import { OrderDetailSheet } from "@/components/orders/OrderDetailSheet";
 import {
   Table,
   TableBody,
@@ -40,6 +41,8 @@ const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -172,7 +175,14 @@ const Orders = () => {
                 </TableRow>
               ) : (
                 filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
+                  <TableRow 
+                    key={order.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setSheetOpen(true);
+                    }}
+                  >
                     <TableCell className="font-medium">{order.order_number}</TableCell>
                     <TableCell>
                       {order.profiles?.first_name} {order.profiles?.last_name}
@@ -191,7 +201,7 @@ const Orders = () => {
                     <TableCell>
                       {new Date(order.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Select
                         value={order.status}
                         onValueChange={(value) => updateOrderStatus(order.id, value)}
@@ -214,6 +224,12 @@ const Orders = () => {
             </TableBody>
           </Table>
         </div>
+
+        <OrderDetailSheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          order={selectedOrder}
+        />
       </div>
     </DashboardLayout>
   );
