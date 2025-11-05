@@ -97,6 +97,37 @@ export const OrderDetailSheet = ({ open, onOpenChange, order }: OrderDetailSheet
 
           <Separator />
 
+          {/* Order Items */}
+          {order.meal_plans?.meal_plan_items && order.meal_plans.meal_plan_items.length > 0 && (
+            <>
+              <div>
+                <h4 className="font-medium mb-3">Order Items</h4>
+                <div className="space-y-3">
+                  {order.meal_plans.meal_plan_items.map((item: any) => (
+                    <div key={item.id} className="flex gap-3 p-3 border rounded-lg">
+                      {item.meals?.image_url && (
+                        <img 
+                          src={item.meals.image_url} 
+                          alt={item.meals.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium">{item.meals?.name || 'Custom Meal'}</p>
+                        <p className="text-sm text-muted-foreground capitalize">{item.meal_type}</p>
+                        <div className="flex justify-between items-center mt-1">
+                          <p className="text-sm">Qty: {item.quantity}</p>
+                          <p className="text-sm font-medium">ETB {item.unit_price.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
           {/* Delivery Info */}
           {(order.delivery_date || order.delivery_time_slot) && (
             <>

@@ -31,10 +31,33 @@ interface Order {
   status: string;
   payment_status: string;
   created_at: string;
+  delivery_address: any;
+  delivery_date: string;
+  delivery_time_slot: string;
+  notes: string;
+  subtotal: number;
+  delivery_fee: number;
+  discount_amount: number;
+  payment_method: string;
+  meal_plan_id: string | null;
   profiles: {
     first_name: string;
     last_name: string;
   };
+  meal_plans?: {
+    meal_plan_items: Array<{
+      id: string;
+      quantity: number;
+      unit_price: number;
+      meal_type: string;
+      meal_id: string | null;
+      meals: {
+        id: string;
+        name: string;
+        image_url: string;
+      } | null;
+    }>;
+  } | null;
 }
 
 const Orders = () => {
@@ -63,7 +86,20 @@ const Orders = () => {
     try {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, profiles(first_name, last_name)")
+        .select(`
+          *,
+          profiles(first_name, last_name),
+          meal_plans(
+            meal_plan_items(
+              id,
+              quantity,
+              unit_price,
+              meal_type,
+              meal_id,
+              meals:meal_id(id, name, image_url)
+            )
+          )
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
