@@ -96,7 +96,7 @@ const Orders = () => {
               unit_price,
               meal_type,
               meal_id,
-              meals:meal_id(id, name, image_url)
+              meals(id, name, image_url)
             )
           )
         `)
