@@ -11,6 +11,8 @@ interface OrderDetailSheetProps {
 export const OrderDetailSheet = ({ open, onOpenChange, order }: OrderDetailSheetProps) => {
   if (!order) return null;
 
+  const items = order.items || order.meal_plans?.meal_plan_items;
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending: "bg-yellow-100 text-yellow-800",
@@ -98,28 +100,61 @@ export const OrderDetailSheet = ({ open, onOpenChange, order }: OrderDetailSheet
           <Separator />
 
           {/* Order Items */}
-          {order.meal_plans?.meal_plan_items && order.meal_plans.meal_plan_items.length > 0 && (
+          {items && items.length > 0 && (
             <>
               <div>
                 <h4 className="font-medium mb-3">Order Items</h4>
                 <div className="space-y-3">
-                  {order.meal_plans.meal_plan_items.map((item: any) => (
+                  {items.map((item: any) => (
                     <div key={item.id} className="flex gap-3 p-3 border rounded-lg">
-                      {item.meals?.image_url && (
-                        <img 
-                          src={item.meals.image_url} 
-                          alt={item.meals.name}
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <p className="font-medium">{item.meals?.name || 'Custom Meal'}</p>
-                        <p className="text-sm text-muted-foreground capitalize">{item.meal_type}</p>
-                        <div className="flex justify-between items-center mt-1">
-                          <p className="text-sm">Qty: {item.quantity}</p>
-                          <p className="text-sm font-medium">ETB {item.unit_price.toLocaleString()}</p>
+                      {item.is_half_half || (item.half_meal_1 && item.half_meal_2) ? (
+                        <div className="flex gap-2 flex-1">
+                          <div className="flex items-center gap-2 flex-1">
+                            {item.half_meal_1?.image_url && (
+                              <img 
+                                src={item.half_meal_1.image_url} 
+                                alt={item.half_meal_1.name}
+                                className="w-12 h-12 object-cover rounded"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{item.half_meal_1?.name}</p>
+                              <p className="text-xs text-muted-foreground">Half portion</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-1">
+                            {item.half_meal_2?.image_url && (
+                              <img 
+                                src={item.half_meal_2.image_url} 
+                                alt={item.half_meal_2.name}
+                                className="w-12 h-12 object-cover rounded"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{item.half_meal_2?.name}</p>
+                              <p className="text-xs text-muted-foreground">Half portion</p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <>
+                          {item.meals?.image_url && (
+                            <img 
+                              src={item.meals.image_url} 
+                              alt={item.meals.name}
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-medium">{item.meals?.name || 'Meal'}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{item.meal_type}</p>
+                            <div className="flex justify-between items-center mt-1">
+                              <p className="text-sm">Qty: {item.quantity}</p>
+                              <p className="text-sm font-medium">ETB {item.unit_price?.toLocaleString?.() ?? item.unit_price}</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>

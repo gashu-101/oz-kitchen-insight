@@ -44,20 +44,16 @@ interface Order {
     first_name: string;
     last_name: string;
   };
-  meal_plans?: {
-    meal_plan_items: Array<{
-      id: string;
-      quantity: number;
-      unit_price: number;
-      meal_type: string;
-      meal_id: string | null;
-      meals: {
-        id: string;
-        name: string;
-        image_url: string;
-      } | null;
-    }>;
-  } | null;
+  items?: Array<{
+    id: string;
+    quantity: number;
+    unit_price: number;
+    meal_type: string;
+    is_half_half?: boolean;
+    meals: { id: string; name: string; image_url: string } | null;
+    half_meal_1: { id: string; name: string; image_url: string } | null;
+    half_meal_2: { id: string; name: string; image_url: string } | null;
+  }>;
 }
 
 const Orders = () => {
@@ -84,27 +80,71 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
-        .select(`
-          *,
-          profiles(first_name, last_name),
-          meal_plans(
-            meal_plan_items(
-              id,
-              quantity,
-              unit_price,
-              meal_type,
-              meal_id,
-              meals(id, name, image_url)
-            )
-          )
-        `)
+        .select("*, profiles(first_name, last_name)")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setOrders(data || []);
+      if (ordersError) throw ordersError;
+
+      const mealPlanIds = (ordersData || [])
+        .map((o: any) => o.meal_plan_id)
+        .filter((id: string | null) => !!id);
+
+      let itemsByPlan: Record<string, any[]> = {};
+
+      if (mealPlanIds.length > 0) {
+        const { data: itemsData, error: itemsError } = await supabase
+          .from("meal_plan_items")
+          .select("id, meal_plan_id, meal_id, half_meal_1_id, half_meal_2_id, quantity, unit_price, meal_type, is_half_half")
+          .in("meal_plan_id", mealPlanIds);
+
+        if (itemsError) throw itemsError;
+
+        const mealIds = Array.from(
+          new Set(
+            (itemsData || []).flatMap((i: any) => [i.meal_id, i.half_meal_1_id, i.half_meal_2_id].filter(Boolean))
+          )
+        );
+
+        let mealMap: Record<string, any> = {};
+        if (mealIds.length > 0) {
+          const { data: mealsData, error: mealsError } = await supabase
+            .from("meals")
+            .select("id, name, image_url")
+            .in("id", mealIds);
+
+          if (mealsError) throw mealsError;
+          mealMap = Object.fromEntries((mealsData || []).map((m: any) => [m.id, m]));
+        }
+
+        itemsByPlan = (itemsData || []).reduce((acc: Record<string, any[]>, i: any) => {
+          const key = i.meal_plan_id;
+          const normalized = {
+            id: i.id,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            meal_type: i.meal_type,
+            is_half_half: !!(i.half_meal_1_id && i.half_meal_2_id) || i.is_half_half === true,
+            meals: i.meal_id ? mealMap[i.meal_id] || null : null,
+            half_meal_1: i.half_meal_1_id ? mealMap[i.half_meal_1_id] || null : null,
+            half_meal_2: i.half_meal_2_id ? mealMap[i.half_meal_2_id] || null : null,
+          };
+          acc[key] = acc[key] || [];
+          acc[key].push(normalized);
+          return acc;
+        }, {});
+      }
+
+      const withItems = (ordersData || []).map((o: any) => ({
+        ...o,
+        items: o.meal_plan_id ? itemsByPlan[o.meal_plan_id] || [] : [],
+      }));
+
+      setOrders(withItems);
     } catch (error: any) {
+      console.error("fetchOrders error", error);
       toast.error("Failed to fetch orders");
     } finally {
       setLoading(false);
