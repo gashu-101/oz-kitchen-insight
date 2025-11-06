@@ -108,32 +108,48 @@ export const OrderDetailSheet = ({ open, onOpenChange, order }: OrderDetailSheet
                   {items.map((item: any) => (
                     <div key={item.id} className="flex gap-3 p-3 border rounded-lg">
                       {item.is_half_half || (item.half_meal_1 && item.half_meal_2) ? (
-                        <div className="flex gap-2 flex-1">
-                          <div className="flex items-center gap-2 flex-1">
-                            {item.half_meal_1?.image_url && (
-                              <img 
-                                src={item.half_meal_1.image_url} 
-                                alt={item.half_meal_1.name}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">{item.half_meal_1?.name}</p>
-                              <p className="text-xs text-muted-foreground">Half portion</p>
+                        <div className="flex-1">
+                          <div className="flex gap-2">
+                            <div className="flex items-center gap-2 flex-1">
+                              {item.half_meal_1?.image_url && (
+                                <img 
+                                  src={item.half_meal_1.image_url} 
+                                  alt={item.half_meal_1.name}
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                              )}
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{item.half_meal_1?.name}</p>
+                                <p className="text-xs text-muted-foreground">Half portion</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-1">
+                              {item.half_meal_2?.image_url && (
+                                <img 
+                                  src={item.half_meal_2.image_url} 
+                                  alt={item.half_meal_2.name}
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                              )}
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{item.half_meal_2?.name}</p>
+                                <p className="text-xs text-muted-foreground">Half portion</p>
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 flex-1">
-                            {item.half_meal_2?.image_url && (
-                              <img 
-                                src={item.half_meal_2.image_url} 
-                                alt={item.half_meal_2.name}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">{item.half_meal_2?.name}</p>
-                              <p className="text-xs text-muted-foreground">Half portion</p>
-                            </div>
+                          {item.delivery_date && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Delivery: {new Date(item.delivery_date).toLocaleDateString('en-US', { 
+                                weekday: 'short', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                              {item.delivery_time_slot && ` (${item.delivery_time_slot})`}
+                            </p>
+                          )}
+                          <div className="flex justify-between items-center mt-1">
+                            <p className="text-sm">Qty: {item.quantity}</p>
+                            <p className="text-sm font-medium">ETB {item.unit_price?.toLocaleString?.() ?? item.unit_price}</p>
                           </div>
                         </div>
                       ) : (
@@ -148,6 +164,16 @@ export const OrderDetailSheet = ({ open, onOpenChange, order }: OrderDetailSheet
                           <div className="flex-1">
                             <p className="font-medium">{item.meals?.name || 'Meal'}</p>
                             <p className="text-sm text-muted-foreground capitalize">{item.meal_type}</p>
+                            {item.delivery_date && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Delivery: {new Date(item.delivery_date).toLocaleDateString('en-US', { 
+                                  weekday: 'short', 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                                {item.delivery_time_slot && ` (${item.delivery_time_slot})`}
+                              </p>
+                            )}
                             <div className="flex justify-between items-center mt-1">
                               <p className="text-sm">Qty: {item.quantity}</p>
                               <p className="text-sm font-medium">ETB {item.unit_price?.toLocaleString?.() ?? item.unit_price}</p>
