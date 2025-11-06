@@ -49,6 +49,8 @@ interface Order {
     quantity: number;
     unit_price: number;
     meal_type: string;
+    delivery_date: string;
+    delivery_time_slot: string;
     is_half_half?: boolean;
     meals: { id: string; name: string; image_url: string } | null;
     half_meal_1: { id: string; name: string; image_url: string } | null;
@@ -97,7 +99,7 @@ const Orders = () => {
       if (mealPlanIds.length > 0) {
         const { data: itemsData, error: itemsError } = await supabase
           .from("meal_plan_items")
-          .select("id, meal_plan_id, meal_id, half_meal_1_id, half_meal_2_id, quantity, unit_price, meal_type, is_half_half")
+          .select("id, meal_plan_id, meal_id, half_meal_1_id, half_meal_2_id, quantity, unit_price, meal_type, is_half_half, delivery_date, delivery_time_slot")
           .in("meal_plan_id", mealPlanIds);
 
         if (itemsError) throw itemsError;
@@ -126,6 +128,8 @@ const Orders = () => {
             quantity: i.quantity,
             unit_price: i.unit_price,
             meal_type: i.meal_type,
+            delivery_date: i.delivery_date,
+            delivery_time_slot: i.delivery_time_slot,
             is_half_half: !!(i.half_meal_1_id && i.half_meal_2_id) || i.is_half_half === true,
             meals: i.meal_id ? mealMap[i.meal_id] || null : null,
             half_meal_1: i.half_meal_1_id ? mealMap[i.half_meal_1_id] || null : null,
