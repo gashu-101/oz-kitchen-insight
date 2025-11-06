@@ -1,24 +1,30 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const data = [
-  { name: "Jan", revenue: 4000 },
-  { name: "Feb", revenue: 3000 },
-  { name: "Mar", revenue: 5000 },
-  { name: "Apr", revenue: 4500 },
-  { name: "May", revenue: 6000 },
-  { name: "Jun", revenue: 5500 },
-];
+interface RevenueData {
+  name: string;
+  revenue: number;
+}
 
-export const RevenueChart = () => {
+interface RevenueChartProps {
+  data: RevenueData[];
+  loading?: boolean;
+}
+
+export const RevenueChart = ({ data, loading }: RevenueChartProps) => {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Revenue Trend</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+        {loading ? (
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            Loading chart data...
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               dataKey="name"
@@ -45,6 +51,7 @@ export const RevenueChart = () => {
             />
           </LineChart>
         </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );

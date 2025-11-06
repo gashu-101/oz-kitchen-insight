@@ -16,10 +16,12 @@ const Dashboard = () => {
     activeUsers: 0,
     totalMeals: 0,
   });
+  const [revenueData, setRevenueData] = useState<{ name: string; revenue: number }[]>([]);
 
   useEffect(() => {
     checkAuth();
     fetchStats();
+    fetchRevenueData();
   }, []);
 
   const checkAuth = async () => {
@@ -65,6 +67,42 @@ const Dashboard = () => {
     }
   };
 
+  const fetchRevenueData = async () => {
+    try {
+      // Fetch orders from the last 6 months
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("created_at, total_amount")
+        .gte("created_at", sixMonthsAgo.toISOString())
+        .order("created_at", { ascending: true });
+
+      if (orders) {
+        // Group by month
+        const monthlyRevenue = new Map<string, number>();
+        
+        orders.forEach((order) => {
+          const date = new Date(order.created_at);
+          const monthKey = date.toLocaleString('en-US', { month: 'short' });
+          const current = monthlyRevenue.get(monthKey) || 0;
+          monthlyRevenue.set(monthKey, current + Number(order.total_amount));
+        });
+
+        // Convert to chart format
+        const chartData = Array.from(monthlyRevenue.entries()).map(([name, revenue]) => ({
+          name,
+          revenue: Math.round(revenue),
+        }));
+
+        setRevenueData(chartData);
+      }
+    } catch (error) {
+      console.error("Error fetching revenue data:", error);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -105,7 +143,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <RevenueChart />
+          <RevenueChart data={revenueData} loading={loading} />
           <RecentOrders />
         </div>
       </div>
