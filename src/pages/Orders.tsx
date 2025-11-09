@@ -64,28 +64,60 @@ const Orders = () => {
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    fetchOrders();
-    
-    const channel = supabase
-      .channel('orders-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        fetchOrders();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    checkAdminStatus();
   }, []);
+
+  useEffect(() => {
+    if (isAdmin !== null) {
+      fetchOrders();
+      
+      const channel = supabase
+        .channel('orders-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+          fetchOrders();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [isAdmin]);
+
+  const checkAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+
+    const { data: adminData } = await supabase
+      .from("admin_users")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    setIsAdmin(!!adminData);
+  };
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const { data: ordersData, error: ordersError } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      let query = supabase
         .from("orders")
-        .select("*, profiles(first_name, last_name)")
+        .select("*, profiles(first_name, last_name)");
+      
+      // If not admin, only fetch user's own orders
+      if (!isAdmin && user) {
+        query = query.eq("user_id", user.id);
+      }
+      
+      const { data: ordersData, error: ordersError } = await query
         .order("created_at", { ascending: false });
 
       if (ordersError) throw ordersError;
