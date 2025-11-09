@@ -186,8 +186,11 @@ export type Database = {
           created_at: string | null
           delivery_date: string
           delivery_time_slot: string | null
+          half_meal_1_id: string | null
+          half_meal_2_id: string | null
           id: string
-          meal_id: string
+          is_half_half: boolean | null
+          meal_id: string | null
           meal_plan_id: string | null
           meal_time: string | null
           meal_type: string | null
@@ -201,8 +204,11 @@ export type Database = {
           created_at?: string | null
           delivery_date: string
           delivery_time_slot?: string | null
+          half_meal_1_id?: string | null
+          half_meal_2_id?: string | null
           id?: string
-          meal_id: string
+          is_half_half?: boolean | null
+          meal_id?: string | null
           meal_plan_id?: string | null
           meal_time?: string | null
           meal_type?: string | null
@@ -216,8 +222,11 @@ export type Database = {
           created_at?: string | null
           delivery_date?: string
           delivery_time_slot?: string | null
+          half_meal_1_id?: string | null
+          half_meal_2_id?: string | null
           id?: string
-          meal_id?: string
+          is_half_half?: boolean | null
+          meal_id?: string | null
           meal_plan_id?: string | null
           meal_time?: string | null
           meal_type?: string | null
@@ -229,8 +238,15 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "meal_plan_items_meal_id_fkey"
-            columns: ["meal_id"]
+            foreignKeyName: "meal_plan_items_half_meal_1_id_fkey"
+            columns: ["half_meal_1_id"]
+            isOneToOne: false
+            referencedRelation: "meals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_items_half_meal_2_id_fkey"
+            columns: ["half_meal_2_id"]
             isOneToOne: false
             referencedRelation: "meals"
             referencedColumns: ["id"]
@@ -248,6 +264,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          order_type: string
           status: string | null
           subscription_id: string | null
           total_amount: number
@@ -258,6 +275,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          order_type?: string
           status?: string | null
           subscription_id?: string | null
           total_amount?: number
@@ -268,6 +286,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          order_type?: string
           status?: string | null
           subscription_id?: string | null
           total_amount?: number
@@ -995,6 +1014,10 @@ export type Database = {
       is_valid_partner_api_key: { Args: { api_key: string }; Returns: boolean }
       link_referral_to_user: {
         Args: { p_referral_token: string; p_user_id: string }
+        Returns: boolean
+      }
+      promote_user_to_admin: {
+        Args: { admin_role?: string; target_user_id: string }
         Returns: boolean
       }
       reset_sample_data: { Args: never; Returns: undefined }

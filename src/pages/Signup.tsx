@@ -65,8 +65,10 @@ const Signup = () => {
           <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center">
             <ChefHat className="w-8 h-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl font-bold">Create Admin Account</CardTitle>
-          <CardDescription>Sign up for OZ Kitchen Admin access</CardDescription>
+          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
+          <CardDescription>
+            Sign up for OZ Kitchen. After registration, contact a super admin to grant admin access.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">

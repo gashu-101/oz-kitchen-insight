@@ -13,6 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, ShieldCheck } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -22,14 +30,18 @@ interface Profile {
   role: string;
   created_at: string;
   referral_partner_id: string;
+  admin_role?: string;
+  is_admin?: boolean;
 }
 
 const Users = () => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [currentUserIsSuperAdmin, setCurrentUserIsSuperAdmin] = useState(false);
 
   useEffect(() => {
+    checkSuperAdmin();
     fetchUsers();
     
     const channel = supabase
@@ -44,19 +56,66 @@ const Users = () => {
     };
   }, []);
 
+  const checkSuperAdmin = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase.rpc('is_super_admin', { user_id: user.id });
+      if (!error && data) {
+        setCurrentUserIsSuperAdmin(true);
+      }
+    } catch (error) {
+      console.error('Error checking super admin:', error);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setUsers(data || []);
+      if (profilesError) throw profilesError;
+
+      // Fetch admin users
+      const { data: adminData } = await supabase
+        .from("admin_users")
+        .select("id, role, is_active");
+
+      const adminMap = new Map(adminData?.map(a => [a.id, a]) || []);
+
+      const enrichedUsers = (profilesData || []).map(profile => {
+        const admin = adminMap.get(profile.id);
+        return {
+          ...profile,
+          admin_role: admin?.role,
+          is_admin: admin?.is_active || false,
+        };
+      });
+
+      setUsers(enrichedUsers);
     } catch (error: any) {
       toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const promoteToAdmin = async (userId: string, role: string = 'admin') => {
+    try {
+      const { error } = await supabase.rpc('promote_user_to_admin', {
+        target_user_id: userId,
+        admin_role: role,
+      });
+
+      if (error) throw error;
+
+      toast.success(`User promoted to ${role} successfully`);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to promote user");
     }
   };
 
@@ -91,21 +150,22 @@ const Users = () => {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Phone</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead>Admin Role</TableHead>
                 <TableHead>Referred</TableHead>
                 <TableHead>Joined</TableHead>
+                {currentUserIsSuperAdmin && <TableHead>Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={currentUserIsSuperAdmin ? 6 : 5} className="text-center py-8">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={currentUserIsSuperAdmin ? 6 : 5} className="text-center py-8">
                     No users found
                   </TableCell>
                 </TableRow>
@@ -117,7 +177,14 @@ const Users = () => {
                     </TableCell>
                     <TableCell>{user.phone_number || "-"}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{user.role || "user"}</Badge>
+                      {user.is_admin ? (
+                        <Badge variant="default" className="gap-1">
+                          <ShieldCheck className="w-3 h-3" />
+                          {user.admin_role || "admin"}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">user</Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {user.referral_partner_id ? (
@@ -131,6 +198,25 @@ const Users = () => {
                     <TableCell>
                       {new Date(user.created_at).toLocaleDateString()}
                     </TableCell>
+                    {currentUserIsSuperAdmin && (
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => promoteToAdmin(user.id, 'admin')}>
+                              Promote to Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => promoteToAdmin(user.id, 'super_admin')}>
+                              Promote to Super Admin
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
