@@ -59,23 +59,26 @@ export const OrderDetailSheet = ({ open, onOpenChange, order }: OrderDetailSheet
                 <h4 className="font-medium mb-2">Delivery Address</h4>
                 <div className="text-sm space-y-1">
                   {order.delivery_address.street && (
-                    <p>{order.delivery_address.street}</p>
+                    <p>{String(order.delivery_address.street)}</p>
                   )}
                   {order.delivery_address.city && (
-                    <p>{order.delivery_address.city}</p>
+                    <p>{typeof order.delivery_address.city === 'object' ? order.delivery_address.city.city || JSON.stringify(order.delivery_address.city) : String(order.delivery_address.city)}</p>
+                  )}
+                  {order.delivery_address.campus && (
+                    <p>Campus: {typeof order.delivery_address.campus === 'object' ? order.delivery_address.campus.campus || JSON.stringify(order.delivery_address.campus) : String(order.delivery_address.campus)}</p>
                   )}
                   {order.delivery_address.zone && (
-                    <p>Zone: {order.delivery_address.zone}</p>
+                    <p>Zone: {String(order.delivery_address.zone)}</p>
                   )}
                   {order.delivery_address.building_number && (
-                    <p>Building: {order.delivery_address.building_number}</p>
+                    <p>Building: {String(order.delivery_address.building_number)}</p>
                   )}
                   {order.delivery_address.floor && (
-                    <p>Floor: {order.delivery_address.floor}</p>
+                    <p>Floor: {String(order.delivery_address.floor)}</p>
                   )}
                   {order.delivery_address.special_instructions && (
                     <p className="text-muted-foreground italic">
-                      {order.delivery_address.special_instructions}
+                      {String(order.delivery_address.special_instructions)}
                     </p>
                   )}
                 </div>
