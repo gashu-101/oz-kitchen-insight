@@ -122,9 +122,13 @@ const Orders = () => {
 
       if (ordersError) throw ordersError;
 
+      console.log("Orders data:", ordersData);
+
       const mealPlanIds = (ordersData || [])
         .map((o: any) => o.meal_plan_id)
         .filter((id: string | null) => !!id);
+
+      console.log("Meal plan IDs:", mealPlanIds);
 
       let itemsByPlan: Record<string, any[]> = {};
 
@@ -177,6 +181,8 @@ const Orders = () => {
         ...o,
         items: o.meal_plan_id ? itemsByPlan[o.meal_plan_id] || [] : [],
       }));
+
+      console.log("Orders with items:", withItems);
 
       setOrders(withItems);
     } catch (error: any) {
