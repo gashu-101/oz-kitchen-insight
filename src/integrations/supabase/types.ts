@@ -923,6 +923,7 @@ export type Database = {
       create_sample_user_data: { Args: { user_id: string }; Returns: undefined }
       expire_old_referrals: { Args: never; Returns: undefined }
       expire_old_referrals_scheduled: { Args: never; Returns: undefined }
+      expire_old_subscriptions: { Args: never; Returns: undefined }
       generate_monthly_settlement: {
         Args: { p_partner_id: string; p_settlement_month: string }
         Returns: string

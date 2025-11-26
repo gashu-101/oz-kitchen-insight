@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Download } from "lucide-react";
+import { Search, Download, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { exportToCSV } from "@/lib/csvExport";
 import { OrderDetailSheet } from "@/components/orders/OrderDetailSheet";
@@ -23,6 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 interface Order {
   id: string;
@@ -65,6 +72,8 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     checkAdminStatus();
@@ -208,9 +217,13 @@ const Orders = () => {
     }
   };
 
-  const filteredOrders = orders.filter((order) =>
-    order.order_number.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch = order.order_number.toLowerCase().includes(search.toLowerCase());
+    const orderDate = new Date(order.created_at);
+    const matchesStartDate = !startDate || orderDate >= startDate;
+    const matchesEndDate = !endDate || orderDate <= new Date(endDate.setHours(23, 59, 59, 999));
+    return matchesSearch && matchesStartDate && matchesEndDate;
+  });
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -224,19 +237,38 @@ const Orders = () => {
   };
 
   const handleExportCSV = () => {
-    const exportData = filteredOrders.map(order => ({
-      order_number: order.order_number,
-      customer_name: `${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}`.trim(),
-      total_amount: order.total_amount,
-      status: order.status,
-      payment_status: order.payment_status,
-      created_at: new Date(order.created_at).toLocaleString(),
-    }));
+    const exportData = filteredOrders.map(order => {
+      const addr = order.delivery_address;
+      return {
+        order_number: order.order_number,
+        customer_name: `${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}`.trim(),
+        phone: addr?.phone || '',
+        full_name: addr?.fullName || '',
+        street: addr?.street?.street || '',
+        city: addr?.street?.city || '',
+        zone: addr?.street?.zone || '',
+        building_number: addr?.street?.building_number || '',
+        floor: addr?.street?.floor || '',
+        landmark: addr?.street?.landmark || '',
+        special_instructions: addr?.street?.special_instructions || '',
+        total_amount: order.total_amount,
+        subtotal: order.subtotal,
+        delivery_fee: order.delivery_fee,
+        discount_amount: order.discount_amount,
+        status: order.status,
+        payment_status: order.payment_status,
+        payment_method: order.payment_method || '',
+        delivery_date: order.delivery_date || '',
+        delivery_time_slot: order.delivery_time_slot || '',
+        notes: order.notes || '',
+        created_at: new Date(order.created_at).toLocaleString(),
+      };
+    });
 
     exportToCSV(
       exportData,
       'orders',
-      ['order_number', 'customer_name', 'total_amount', 'status', 'payment_status', 'created_at']
+      ['order_number', 'customer_name', 'phone', 'full_name', 'street', 'city', 'zone', 'building_number', 'floor', 'landmark', 'special_instructions', 'total_amount', 'subtotal', 'delivery_fee', 'discount_amount', 'status', 'payment_status', 'payment_method', 'delivery_date', 'delivery_time_slot', 'notes', 'created_at']
     );
     toast.success('Orders exported successfully');
   };
@@ -249,7 +281,7 @@ const Orders = () => {
           <p className="text-muted-foreground">Manage customer orders</p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -259,6 +291,53 @@ const Orders = () => {
               className="pl-10"
             />
           </div>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                <Calendar className="w-4 h-4 mr-2" />
+                {startDate ? format(startDate, "MMM dd, yyyy") : "Start Date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={startDate}
+                onSelect={setStartDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                <Calendar className="w-4 h-4 mr-2" />
+                {endDate ? format(endDate, "MMM dd, yyyy") : "End Date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={endDate}
+                onSelect={setEndDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
+          {(startDate || endDate) && (
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                setStartDate(undefined);
+                setEndDate(undefined);
+              }}
+            >
+              Clear Dates
+            </Button>
+          )}
+
           <Button onClick={handleExportCSV} variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Export CSV
