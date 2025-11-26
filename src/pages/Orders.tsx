@@ -239,6 +239,19 @@ const Orders = () => {
   const handleExportCSV = () => {
     const exportData = filteredOrders.map(order => {
       const addr = order.delivery_address;
+      
+      // Format meal items
+      const mealsList = (order.items || []).map(item => {
+        if (item.is_half_half) {
+          const meal1Name = item.half_meal_1?.name || 'Unknown';
+          const meal2Name = item.half_meal_2?.name || 'Unknown';
+          return `${meal1Name} & ${meal2Name} (Half-Half, Qty: ${item.quantity}, ${item.meal_type}, ${item.delivery_date}, ${item.delivery_time_slot})`;
+        } else {
+          const mealName = item.meals?.name || 'Unknown';
+          return `${mealName} (Qty: ${item.quantity}, ${item.meal_type}, ${item.delivery_date}, ${item.delivery_time_slot})`;
+        }
+      }).join(' | ');
+      
       return {
         order_number: order.order_number,
         customer_name: `${order.profiles?.first_name || ''} ${order.profiles?.last_name || ''}`.trim(),
@@ -251,6 +264,7 @@ const Orders = () => {
         floor: addr?.street?.floor || '',
         landmark: addr?.street?.landmark || '',
         special_instructions: addr?.street?.special_instructions || '',
+        meals: mealsList,
         total_amount: order.total_amount,
         subtotal: order.subtotal,
         delivery_fee: order.delivery_fee,
@@ -268,7 +282,7 @@ const Orders = () => {
     exportToCSV(
       exportData,
       'orders',
-      ['order_number', 'customer_name', 'phone', 'full_name', 'street', 'city', 'zone', 'building_number', 'floor', 'landmark', 'special_instructions', 'total_amount', 'subtotal', 'delivery_fee', 'discount_amount', 'status', 'payment_status', 'payment_method', 'delivery_date', 'delivery_time_slot', 'notes', 'created_at']
+      ['order_number', 'customer_name', 'phone', 'full_name', 'street', 'city', 'zone', 'building_number', 'floor', 'landmark', 'special_instructions', 'meals', 'total_amount', 'subtotal', 'delivery_fee', 'discount_amount', 'status', 'payment_status', 'payment_method', 'delivery_date', 'delivery_time_slot', 'notes', 'created_at']
     );
     toast.success('Orders exported successfully');
   };
