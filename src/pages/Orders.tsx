@@ -74,6 +74,7 @@ const Orders = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [deliveryDateFilter, setDeliveryDateFilter] = useState<Date>(new Date());
 
   useEffect(() => {
     checkAdminStatus();
@@ -222,7 +223,14 @@ const Orders = () => {
     const orderDate = new Date(order.created_at);
     const matchesStartDate = !startDate || orderDate >= startDate;
     const matchesEndDate = !endDate || orderDate <= new Date(endDate.setHours(23, 59, 59, 999));
-    return matchesSearch && matchesStartDate && matchesEndDate;
+    
+    // Filter by delivery date - check if any item in the order has the selected delivery date
+    const deliveryDateStr = format(deliveryDateFilter, "yyyy-MM-dd");
+    const hasItemForDeliveryDate = (order.items || []).some(
+      item => item.delivery_date === deliveryDateStr
+    );
+    
+    return matchesSearch && matchesStartDate && matchesEndDate && hasItemForDeliveryDate;
   });
 
   const getStatusColor = (status: string) => {
@@ -305,12 +313,29 @@ const Orders = () => {
               className="pl-10"
             />
           </div>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="default">
+                <Calendar className="w-4 h-4 mr-2" />
+                Delivery: {format(deliveryDateFilter, "MMM dd, yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={deliveryDateFilter}
+                onSelect={(date) => date && setDeliveryDateFilter(date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
           
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline">
                 <Calendar className="w-4 h-4 mr-2" />
-                {startDate ? format(startDate, "MMM dd, yyyy") : "Start Date"}
+                {startDate ? format(startDate, "MMM dd, yyyy") : "Order Start Date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -327,7 +352,7 @@ const Orders = () => {
             <PopoverTrigger asChild>
               <Button variant="outline">
                 <Calendar className="w-4 h-4 mr-2" />
-                {endDate ? format(endDate, "MMM dd, yyyy") : "End Date"}
+                {endDate ? format(endDate, "MMM dd, yyyy") : "Order End Date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -348,7 +373,7 @@ const Orders = () => {
                 setEndDate(undefined);
               }}
             >
-              Clear Dates
+              Clear Order Dates
             </Button>
           )}
 
